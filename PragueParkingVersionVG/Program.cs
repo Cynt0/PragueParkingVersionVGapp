@@ -20,15 +20,17 @@ namespace PragueParkingVersionVG
             string[] parking = new string[101];
             string[] timeStamp = new string[101];
             Array.Fill(parking, "EMPTY");
+            Array.Fill(timeStamp, "EMPTY");
             bool showMenu = true;
             while (showMenu)
             {
                 showMenu = MainMenu(parking, timeStamp);
+
             }
             Console.ReadKey(true);
         }
 
-        
+
 
         public static bool MainMenu(string[] parking, string[] timeStamp)
         {
@@ -153,16 +155,23 @@ namespace PragueParkingVersionVG
                         string hit = "CAR" + "_" + Console.ReadLine().ToUpper();
                         for (int i = 1; i < parking.Length; i++)
                         {
+
                             if (parking[i].Contains(hit) && parking[i].Contains("MC_"))
                             {
                                 Console.WriteLine("Invalid Input! Press any key to continue...");
                                 Console.ReadKey();
                                 break;
                             }
-                                if (parking[i].Contains(hit) && !parking[i].Contains("MC_"))
-                                {   
+                            if (parking[i].Contains(hit) && !parking[i].Contains("MC_"))
+                            {
+
+                                int tempo = timeStamp[i].IndexOf('%');
+                                timeStamp[i] = timeStamp[i].Remove(tempo);
                                 hit = hit + "(" + timeStamp[i] + ")" + '%';
-                                Console.WriteLine("{0} is located at {1}", hit, i);
+                                if (parking[i].Contains(hit) && parking[i].Contains(timeStamp[i]))
+                                {
+                                    Console.WriteLine("{0} is located at {1}", hit, i);
+                                }
                                 Console.WriteLine("Do you wish to relocate? (y/n)");
                                 string answer = Console.ReadLine().ToUpper();
                                 string yes = "Y";
@@ -189,8 +198,7 @@ namespace PragueParkingVersionVG
                                     parking[i] = parking[index];
                                     parking[index] = buffer;
                                     var timeMover = timeStamp[i];
-                                    timeStamp[i] = timeStamp[index];
-                                    timeStamp[index] = timeMover;
+                                    timeStamp[index] = timeMover + '%';
                                     Console.WriteLine("Car: {0}, moved to spot : {1}", hit, index);
                                     Console.ReadKey();
                                 }
@@ -199,7 +207,7 @@ namespace PragueParkingVersionVG
                                     break;
                                 }
                                 break;
-                                }
+                            }
 
                         }
                         break;
@@ -210,12 +218,6 @@ namespace PragueParkingVersionVG
                         string hit = "MC" + "_" + Console.ReadLine().ToUpper();
                         for (int i = 100; i < parking.Length; i--)
                         {
-                            if (!parking[i].Contains(hit) && parking[i].Contains("CAR_"))
-                            {
-                                Console.WriteLine("Invalid Input! Press any key to continue...");
-                                Console.ReadKey();
-                                break;
-                            }
                             if (parking[i].Contains(hit))
                             {
                                 Console.WriteLine("{0} is located at {1}", hit, i);
@@ -236,44 +238,61 @@ namespace PragueParkingVersionVG
                                     }
                                     int index = int.Parse(relocate);
                                     string[] tempTime = new string[2];
-                                    int firstSub = timeStamp[i].IndexOf('-',0);
-                                    tempTime[0] = '(' + timeStamp[i].Substring(0, firstSub) + ')';
-                                    tempTime[1] = '(' + timeStamp[i].Substring(firstSub +1, 5) + ')';
-                                    if (parking[i].Contains(hit + tempTime[0] + '#'))
+                                    int firstSub = timeStamp[i].IndexOf('#', 0);
+                                    tempTime[0] = timeStamp[i].Substring(0, firstSub);
+                                    if (parking[i].Contains(hit + '(' + tempTime[0] + ')' + '#'))
                                     {
-                                        hit += tempTime[0]+ '#';
-                                    }
-                                        else if (parking[i].Contains(hit +  tempTime[1] + '%'))
-                                        { 
-                                            hit += tempTime[1] + '%';
-                                        }
 
+                                        timeStamp[index] = tempTime[0] + '#';
+                                        timeStamp[i] = timeStamp[i].Remove(0, firstSub + 1);
+                                        hit += '(' + tempTime[0] + ')' + '#';
+                                    }
+                                    if (parking[i].Contains('%'))
+                                    {
+                                        tempTime[1] = timeStamp[i].Substring(firstSub + 1, 5);
+
+
+                                    }
+                                    if (parking[i].Contains(hit + '(' + tempTime[1] + ')' + '%'))
+                                    {
+                                        timeStamp[i] = timeStamp[i].Remove(firstSub + 1, 6);
+                                        if (timeStamp[index].Contains('#'))
+                                        {
+                                            timeStamp[index] += tempTime[1] + '%';
+                                        }
+                                        else
+                                        {
+                                            timeStamp[index] = tempTime[1] + '#';
+                                        }
+                                        hit += '(' + tempTime[1] + ')' + '%';
+                                    }
+                                    if (parking[i].Contains(hit) && tempTime[1] == null)
+                                    {
+                                        parking[i] = "EMPTY";
+                                        timeStamp[i] = "EMPTY";
+
+                                    }
+                                    else if (parking[i].Contains(hit) && tempTime[1] != null)
+                                    {
+                                        var IndexRemover = hit.IndexOf('%', 0);
+                                        parking[i] = parking[i].Remove(IndexRemover);
+                                        parking[i] = parking[i] + '#';
+                                        parking[i] = parking[i].Replace('%', '#');
+                                    }
                                     if (parking[index].Contains('%'))
                                     {
                                         Console.WriteLine("Spot taken, Press any key to continue...");
                                         Console.ReadKey();
                                         break;
                                     }
-                                    if (hit.Contains('%'))
-                                    {
-                                        var IndexRemover = hit.IndexOf('%', 0);
-                                        parking[i] = parking[i].Remove(IndexRemover);
-                                        parking[i] = parking[i] + '#';
-                                    }
-                                        else if (hit.Contains('#'))
-                                        {
-                                            parking[i] = parking[i].Remove(0, hit.Length);
-                                            parking[i] = parking[i].Replace('%', '#');
-                                        }
-
                                     if (parking[index].Contains("EMPTY"))
                                     {
                                         parking[index] = String.Empty;
                                         hit = hit.Replace('%', '#');
                                         parking[index] = hit;
                                     }
-                                        else if (parking[index].Contains('#'))
-                                        {
+                                    else if (parking[index].Contains('#'))
+                                    {
                                         Console.WriteLine("Do you want to park beside {0}? (y/n)", parking[index]);
                                         answer = Console.ReadLine().ToUpper();
 
@@ -281,20 +300,20 @@ namespace PragueParkingVersionVG
                                         {
                                             hit = hit.Replace('#', '%');
                                             parking[index] += string.Join('#', hit);
-                                            
+
                                             if (parking[i] == "")
                                             {
                                                 parking[i] = "EMPTY";
-                                            } 
+                                            }
                                         }
-                                            while (answer == no)
-                                            {
+                                        while (answer == no)
+                                        {
                                             Console.WriteLine("Too bad. Press any key to continue...");
                                             Console.ReadKey();
                                             break;
-                                            }
-
                                         }
+
+                                    }
                                     Console.WriteLine("MC: {0}, Successfully moved to spot : {1}", hit, index);
                                     Console.ReadKey();
                                 }
@@ -346,11 +365,11 @@ namespace PragueParkingVersionVG
                 {
                     regNumberCar = "CAR" + '_' + regNumberCar;
                 }
-                    else if (regNumberCar.Length > 10)
-                    {
-                        Console.WriteLine("Too many Characters, Please try again (Max 10)");
-                        break;
-                    }
+                else if (regNumberCar.Length > 10)
+                {
+                    Console.WriteLine("Too many Characters, Please try again (Max 10)");
+                    break;
+                }
 
                 for (int i = 1; i < parking.Length; i++)
                 {
@@ -363,6 +382,7 @@ namespace PragueParkingVersionVG
                     {
                         timeStamp[i] = currentTime;
                         parking[i] = regNumberCar + '(' + timeStamp[i] + ')' + '%';
+                        timeStamp[i] += '%';
                         break;
                     }
                 }
@@ -385,25 +405,28 @@ namespace PragueParkingVersionVG
                     break;
                 }
 
-            for (int i = 100; i > 1; i--)
-            {
-               string currentTime = DateTime.Now.ToString("HH:mm");
-               if (parking[i].Contains('%'))
-               {
-                  continue;
-               }
-               if (parking[i].Contains('#'))
-               {
-                  timeStamp[i] += '-' + currentTime;
-                  parking[i] += regNumberMc + "(" + currentTime + ")" + '%';
-                  break;
-               }
-               if (parking[i].Contains("EMPTY"))
-               {
-                   timeStamp[i] = currentTime;
-                   parking[i] = regNumberMc + "(" + timeStamp[i] + ")" + '#';
-                   break;
-               }
+                for (int i = 100; i > 1; i--)
+                {
+                    string currentTime = DateTime.Now.ToString("HH:mm");
+                    if (parking[i].Contains('%'))
+                    {
+                        continue;
+                    }
+                    if (parking[i].Contains('#'))
+                    {
+
+                        timeStamp[i] += currentTime;
+                        parking[i] += regNumberMc + "(" + currentTime + ")" + '%';
+                        timeStamp[i] += '%';
+                        break;
+                    }
+                    if (parking[i].Contains("EMPTY"))
+                    {
+                        timeStamp[i] = currentTime;
+                        parking[i] = regNumberMc + "(" + timeStamp[i] + ")" + '#';
+                        timeStamp[i] += '#';
+                        break;
+                    }
 
                 }
             }
@@ -606,16 +629,17 @@ namespace PragueParkingVersionVG
                                     kvitto = Regex.Replace(kvitto, @"[^0-9a-zA-Z]+", "");
                                     int kvittoTwo = int.Parse(kvitto);
                                     string currentTime = DateTime.Now.ToString("HH:mm");
-                                    currentTime = Regex.Replace(currentTime, @"[^0-9a-zA-Z]+", ""); 
+                                    currentTime = Regex.Replace(currentTime, @"[^0-9a-zA-Z]+", "");
                                     int timeConverter = int.Parse(currentTime);
                                     int minutes = timeConverter - kvittoTwo;
+
                                     while (minutes >= 60)
                                     {
                                         hours++;
                                         minutes -= 60;
                                     }
-                                    timeStamp[i] = String.Empty;
-                                    Console.WriteLine("You parked here for: {0} Hours and {1} Minutes", hours ,minutes);
+                                    timeStamp[i] = "EMPTY";
+                                    Console.WriteLine("You parked here for: {0} Hours and {1} Minutes", hours, minutes);
                                     Console.WriteLine("Please come again!");
                                     Console.ReadKey();
                                     break;
@@ -642,7 +666,12 @@ namespace PragueParkingVersionVG
                                 {
                                     Console.WriteLine("{0} is located at {1}", hit, i);
                                 }
-                                else if (!parking[i].Contains(hit))
+                                if (!parking[i].Contains(hit))
+                                {
+
+                                    continue;
+                                }
+                                else if (i == 1 && !parking[i].Contains(hit))
                                 {
                                     Console.WriteLine("Invalid Input. Vehicle does not exist, Press any key to continue...");
                                     Console.ReadKey();
@@ -650,48 +679,45 @@ namespace PragueParkingVersionVG
                                 }
                                 Console.WriteLine("Do you want to leave the parking? (y/n)");
                                 string answer = Console.ReadLine().ToLower();
-                                
+
                                 if (answer == y)
                                 {
                                     string[] tempTime = new string[2];
-                                    int firstSub = timeStamp[i].IndexOf('-', 0);
-                                    string secondSub = timeStamp[i].Substring(0, timeStamp[i].Length);
+                                    int firstSub = timeStamp[i].IndexOf('#', 0);
+                                    int secondSub = parking[i].IndexOf('#', 0);
                                     if (!parking[i].Contains('%'))
                                     {
-                                        tempTime[0] = '(' + timeStamp[i].Substring(0, firstSub) + ')';
+                                        tempTime[0] = timeStamp[i].Substring(0, firstSub);
                                     }
-                                        else if (parking[i].Contains('%'))
-                                        {
-                                            tempTime[0] = '(' + timeStamp[i].Substring(0, firstSub) + ')';
-                                            tempTime[1] = '(' + timeStamp[i].Substring(firstSub + 1, 5) + ')';
-                                        }
-                                    if (parking[i].Contains(hit + tempTime[0] + '#') && tempTime[1] == null)
+                                    else if (parking[i].Contains('%'))
                                     {
-                                        hit += tempTime[0] + '#';
+                                        tempTime[0] = timeStamp[i].Substring(0, firstSub);
+                                        tempTime[1] = timeStamp[i].Substring(firstSub + 1, 5);
+                                    }
+                                    if (parking[i].Contains(hit + '(' + tempTime[0] + ')' + '#') && tempTime[1] == null)
+                                    {
+                                        hit += '(' + tempTime[0] + ')' + '#';
                                         kvitto = tempTime[0];
                                         parking[i] = "EMPTY";
-                                        timeStamp[i] = String.Empty;
+                                        timeStamp[i] = "EMPTY";
                                     }
-                                        else if (parking[i].Contains(hit + tempTime[0] + '#'))
-                                        {
-                                            hit += tempTime[0] + '#';
-                                            timeStamp[i] = timeStamp[i].Remove(firstSub);
-                                            parking[i] = parking[i].Remove(0, hit.Length);
-                                            timeStamp[i] = timeStamp[i] + '-';
-                                            kvitto = tempTime[0];
-                                            parking[i] = parking[i].Replace('%', '#');
-                                        }
-                                        else if (parking[i].Contains(hit + tempTime[1] + '%'))
-                                        {
-                                            hit += tempTime[1] + '%';
-                                            kvitto = tempTime[1];
-                                            timeStamp[i] = timeStamp[i].Remove(firstSub + 1, 5);
-                                        }
-                                    if (hit.Contains('%'))
+                                    else if (parking[i].Contains(hit + '(' + tempTime[0] + ')' + '#') && tempTime[1] != null)
                                     {
-                                        var IndexRemover = hit.IndexOf('%', 0);
-                                        parking[i] = parking[i].Remove(IndexRemover);
-                                        parking[i] = parking[i] + '#';
+                                        hit += '(' + tempTime[0] + ')' + '#';
+                                        timeStamp[i] = timeStamp[i].Remove(0, firstSub + 1);
+                                        parking[i] = parking[i].Remove(0, hit.Length);
+                                        timeStamp[i] = timeStamp[i].Replace('%', '#');
+                                        kvitto = tempTime[0];
+                                        parking[i] = parking[i].Replace('%', '#');
+                                    }
+                                    else if (parking[i].Contains(hit + '(' + tempTime[1] + ')' + '%'))
+                                    {
+                                        hit += '(' + tempTime[1] + ')' + '%';
+                                        kvitto = tempTime[1];
+                                        parking[i] = parking[i].Remove(secondSub, hit.Length);
+                                        parking[i] = parking[i].Replace('%', '#');
+                                        timeStamp[i] = timeStamp[i].Remove(firstSub + 1, 6);
+
                                     }
                                     kvitto = Regex.Replace(kvitto, @"[^0-9a-zA-Z]+", "");
                                     int kvittoTwo = int.Parse(kvitto);
